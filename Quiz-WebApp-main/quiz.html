@@ -5,480 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QuizMaster Quiz Page</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
   </head>
-  <body>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
     <div id="header"></div>
 
-    <div
-      class="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto my-auto justify-center"
-    >
-      <!-- Course Selection Section -->
-      <div id="course-selection" class="block">
-        <h2 class="text-xl font-bold mb-4 text-center">Select a Course</h2>
-        <div class="mb-4">
-          <select
-            id="course-dropdown"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+    <div class="flex-grow flex items-center justify-center">
+      <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+        <!-- Course Selection -->
+        <div id="course-selection">
+          <h2 class="text-xl font-bold mb-4 text-center">Select a Course</h2>
+          <select id="course-dropdown" class="w-full mb-4 p-2 border rounded">
             <option value="" disabled selected>Choose a course</option>
             <option value="math">Mathematics</option>
             <option value="history">History</option>
+            <option value="mythology">Indian Mythology</option>
           </select>
-        </div>
-        <button
-          id="startQuizBtn"
-          onclick="startQuiz()"
-          class="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          disabled
-        >
-          Start Quiz
-        </button>
-      </div>
-
-      <!-- Quiz Section -->
-      <div id="quiz-section" class="hidden">
-        <!-- Progress and Timer -->
-        <div class="flex justify-between items-center mb-4">
-          <div id="question-indicator" class="font-semibold">
-            Question <span id="current">1</span> of 5
-          </div>
-          <div id="timer" class="text-lg font-bold text-red-500">
-            Time: <span id="time">20</span>s
-          </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-          <div
-            id="progress-bar"
-            class="bg-blue-500 h-2.5 rounded-full"
-            style="width: 20%"
-          ></div>
-        </div>
-
-        <!-- Questions Container (will be filled dynamically) -->
-        <div id="questions-container"></div>
-
-        <!-- Navigation Buttons -->
-        <div id="navigation" class="mt-5 flex justify-between">
           <button
-            id="prevBtn"
-            onclick="showPreviousQuestion()"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            id="startQuizBtn"
+            onclick="startQuiz()"
+            class="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+            disabled
           >
-            Previous
-          </button>
-          <button
-            id="nextBtn"
-            onclick="showNextQuestion()"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            Next
+            Start Quiz
           </button>
         </div>
-      </div>
 
-      <!-- Results Section -->
-      <div id="result" class="hidden">
-        <h2 class="text-xl font-bold mb-4 text-center">Quiz Results</h2>
-        <div class="text-center text-lg mb-2">
-          <span class="font-bold">Your Score: <span id="score">0</span>/5</span>
+        <!-- Quiz Section -->
+        <div id="quiz-section" class="hidden">
+          <div class="flex justify-between mb-2">
+            <span>Question <span id="current">1</span> of <span id="total">5</span></span>
+            <span class="text-red-500 font-bold">Time: <span id="time">20</span>s</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div id="progress-bar" class="bg-blue-500 h-2.5 rounded-full" style="width: 20%"></div>
+          </div>
+          <div id="questions-container"></div>
+          <div class="flex justify-between mt-4">
+            <button id="prevBtn" onclick="showPreviousQuestion()" class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300">Previous</button>
+            <button id="nextBtn" onclick="showNextQuestion()" class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300">Next</button>
+          </div>
         </div>
-        <button
-          onclick="resetQuiz()"
-          class="w-full mt-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
-        >
-          Try Again
-        </button>
+
+        <!-- Result Section -->
+        <div id="result" class="hidden text-center">
+          <h2 class="text-xl font-bold mb-4">Quiz Results</h2>
+          <p class="text-lg">Your Score: <span id="score">0</span>/5</p>
+          <button onclick="resetQuiz()" class="mt-4 py-2 px-6 bg-blue-500 text-white rounded hover:bg-blue-600">Try Again</button>
+          <div id="question-summary" class="mt-4 text-left"></div>
+        </div>
       </div>
     </div>
 
-    <div id="footer" class="fixed w-full bottom-0"></div>
+    <div id="footer" class="mt-8"></div>
 
     <script>
-      fetch("header.html")
-        .then((response) => response.text())
-        .then((data) => (document.getElementById("header").innerHTML = data));
+      // Load header and footer
+      fetch("header.html").then(res => res.text()).then(data => document.getElementById("header").innerHTML = data);
+      fetch("footer.html").then(res => res.text()).then(data => document.getElementById("footer").innerHTML = data);
 
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => (document.getElementById("footer").innerHTML = data));
-
-      // Variables
       let currentQuestion = 1;
+      let totalQuestions = 5;
       let timeLeft = 20;
       let timer;
-      let totalQuestions = 5;
-      let lockedQuestions = [];
-      let questionsAnswered = [];
       let selectedCourse = "";
       let currentQuiz = [];
+      let userAnswers = [];
 
-      // Question bank for different courses
       const quizQuestions = {
         math: [
-          {
-            question: "What is 2 + 2?",
-            options: ["3", "4", "5", "6"],
-            correctIndex: 1,
-          },
-          {
-            question: "What is the value of π (pi) to two decimal places?",
-            options: ["3.14", "3.41", "3.12", "3.15"],
-            correctIndex: 0,
-          },
-          {
-            question: "What is the square root of 144?",
-            options: ["12", "14", "10", "16"],
-            correctIndex: 0,
-          },
-          {
-            question: "What is 7 × 8?",
-            options: ["54", "56", "58", "52"],
-            correctIndex: 1,
-          },
-          {
-            question: "What is the sum of angles in a triangle?",
-            options: ["90°", "180°", "270°", "360°"],
-            correctIndex: 1,
-          },
+          { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correctIndex: 1 },
+          { question: "What is π to two decimal places?", options: ["3.14", "3.41", "3.12", "3.15"], correctIndex: 0 },
+          { question: "Square root of 144?", options: ["12", "14", "10", "16"], correctIndex: 0 },
+          { question: "7 × 8?", options: ["54", "56", "58", "52"], correctIndex: 1 },
+          { question: "Sum of angles in triangle?", options: ["90°", "180°", "270°", "360°"], correctIndex: 1 },
         ],
         history: [
-          {
-            question: "In which year did World War II end?",
-            options: ["1943", "1944", "1945", "1946"],
-            correctIndex: 2,
-          },
-          {
-            question: "Who was the first President of the United States?",
-            options: [
-              "Thomas Jefferson",
-              "George Washington",
-              "Abraham Lincoln",
-              "John Adams",
-            ],
-            correctIndex: 1,
-          },
-          {
-            question: "Which ancient civilization built the pyramids of Giza?",
-            options: ["Romans", "Greeks", "Mayans", "Egyptians"],
-            correctIndex: 3,
-          },
-          {
-            question: "In which year did the Titanic sink?",
-            options: ["1910", "1912", "1914", "1916"],
-            correctIndex: 1,
-          },
-          {
-            question:
-              "Which country was ruled by Queen Victoria for over 60 years?",
-            options: ["France", "Germany", "United Kingdom", "Spain"],
-            correctIndex: 2,
-          },
+          { question: "When did WW2 end?", options: ["1943", "1944", "1945", "1946"], correctIndex: 2 },
+          { question: "First US President?", options: ["Jefferson", "Washington", "Lincoln", "Adams"], correctIndex: 1 },
+          { question: "Pyramids of Giza built by?", options: ["Romans", "Greeks", "Mayans", "Egyptians"], correctIndex: 3 },
+          { question: "When did Titanic sink?", options: ["1910", "1912", "1914", "1916"], correctIndex: 1 },
+          { question: "Queen Victoria ruled?", options: ["France", "Germany", "UK", "Spain"], correctIndex: 2 },
+        ],
+        mythology: [
+          { question: "Preserver in Hindu Trinity?", options: ["Brahma", "Shiva", "Vishnu", "Indra"], correctIndex: 2 },
+          { question: "Rama's story in?", options: ["Mahabharata", "Ramayana", "Gita", "Vedas"], correctIndex: 1 },
+          { question: "Great archer Pandava?", options: ["Bhima", "Yudhishthira", "Arjuna", "Sahadeva"], correctIndex: 2 },
+          { question: "Goddess of wealth?", options: ["Durga", "Saraswati", "Lakshmi", "Kali"], correctIndex: 2 },
+          { question: "Monkey god with Rama?", options: ["Garuda", "Hanuman", "Kubera", "Nandi"], correctIndex: 1 },
         ],
       };
 
-      // Enable the Start Quiz button when a course is selected
-      document
-        .getElementById("course-dropdown")
-        .addEventListener("change", function () {
-          selectedCourse = this.value;
-          document.getElementById("startQuizBtn").disabled = false;
-        });
+      document.getElementById("course-dropdown").addEventListener("change", function () {
+        selectedCourse = this.value;
+        document.getElementById("startQuizBtn").disabled = false;
+      });
 
-      // Start Quiz Function
       function startQuiz() {
         document.getElementById("course-selection").classList.add("hidden");
         document.getElementById("quiz-section").classList.remove("hidden");
-        document.getElementById("prevBtn").disabled = true;
-
-        // Load questions for the selected course
         currentQuiz = quizQuestions[selectedCourse];
-        generateQuestionHTML();
-
+        userAnswers = new Array(currentQuiz.length).fill(null);
+        totalQuestions = currentQuiz.length;
+        document.getElementById("total").textContent = totalQuestions;
+        generateQuestions();
+        setTimeout(() => showQuestion(1), 50);
         startTimer();
-        updateProgressBar();
       }
 
-      // Generate HTML for questions
-      function generateQuestionHTML() {
+      function generateQuestions() {
         const container = document.getElementById("questions-container");
         container.innerHTML = "";
-
-        for (let i = 0; i < currentQuiz.length; i++) {
-          const q = currentQuiz[i];
-          const qNum = i + 1;
-
-          const questionDiv = document.createElement("div");
-          questionDiv.id = "question" + qNum;
-          questionDiv.className = qNum === 1 ? "block" : "hidden";
-
-          let questionHTML = `
-            <h3 class="font-bold text-lg mb-3">${q.question}</h3>
+        currentQuiz.forEach((q, idx) => {
+          const qDiv = document.createElement("div");
+          qDiv.id = `question${idx + 1}`;
+          qDiv.classList.add(idx === 0 ? "block" : "hidden");
+          qDiv.innerHTML = `
+            <h3 class="text-lg font-semibold mb-3">${q.question}</h3>
+            ${q.options
+              .map(
+                (opt, i) => `
+              <label class="block mb-2 p-2 bg-gray-100 rounded cursor-pointer hover:bg-blue-100 hover:scale-105 transition-transform duration-200">
+                <input type="radio" name="q${idx}" value="${i}" class="mr-2"> ${opt}
+              </label>`
+              )
+              .join("")}
+            <p id="lock-msg-${idx}" class="text-red-500 hidden mt-2 text-sm">Time's up! Question locked.</p>
           `;
+          container.appendChild(qDiv);
 
-          q.options.forEach((option, index) => {
-            const correctValue = index === q.correctIndex ? "1" : "0";
-            questionHTML += `
-              <div class="mb-2">
-                <label class="block p-2 bg-gray-50 hover:bg-gray-100 rounded cursor-pointer">
-                  <input type="radio" name="q${qNum}" value="${correctValue}" class="mr-2" /> ${option}
-                </label>
-              </div>
-            `;
-          });
-
-          questionHTML += `
-            <div id="lock-message-${qNum}" class="hidden text-red-500 font-semibold text-center mt-2">
-              Time's up! Question locked.
-            </div>
-          `;
-
-          questionDiv.innerHTML = questionHTML;
-          container.appendChild(questionDiv);
-
-          // Add event listeners for the newly created radios
-          const inputs = questionDiv.querySelectorAll(`input[name="q${qNum}"]`);
-          inputs.forEach((input) => {
-            input.addEventListener("change", function () {
-              if (!questionsAnswered.includes(qNum)) {
-                questionsAnswered.push(qNum);
-              }
-              checkQuizCompletion();
+          // Handle selection
+          qDiv.querySelectorAll(`input[name="q${idx}"]`).forEach((radio) => {
+            radio.addEventListener("change", (e) => {
+              userAnswers[idx] = parseInt(e.target.value);
             });
           });
+        });
+      }
+
+      function showQuestion(num) {
+        for (let i = 1; i <= totalQuestions; i++) {
+          document.getElementById(`question${i}`).classList.add("hidden");
+        }
+        document.getElementById(`question${num}`).classList.remove("hidden");
+        document.getElementById("current").textContent = num;
+        document.getElementById("prevBtn").disabled = num === 1;
+        document.getElementById("nextBtn").textContent =
+          num === totalQuestions ? "Submit" : "Next";
+      }
+
+      function showNextQuestion() {
+        if (currentQuestion === totalQuestions) {
+          clearInterval(timer);
+          showResult();
+          return;
+        }
+        currentQuestion++;
+        showQuestion(currentQuestion);
+        resetTimer();
+      }
+
+      function showPreviousQuestion() {
+        if (currentQuestion > 1) {
+          currentQuestion--;
+          showQuestion(currentQuestion);
+          resetTimer();
         }
       }
 
-      // Timer Function
       function startTimer() {
-        timeLeft = 15; // 15 seconds for each question
-        document.getElementById("time").innerText = timeLeft;
-
-        // Clear any existing timer
-        if (timer) clearInterval(timer);
-
-        timer = setInterval(function () {
+        timeLeft = 20;
+        document.getElementById("time").textContent = timeLeft;
+        timer = setInterval(() => {
           timeLeft--;
-          document.getElementById("time").innerText = timeLeft;
-
+          document.getElementById("time").textContent = timeLeft;
           if (timeLeft <= 0) {
             clearInterval(timer);
-            lockCurrentQuestion();
+            document.getElementById(`lock-msg-${currentQuestion - 1}`).classList.remove("hidden");
+            document.querySelectorAll(`#question${currentQuestion} input`).forEach((el) => (el.disabled = true));
           }
         }, 1000);
       }
 
-      // Lock the current question
-      function lockCurrentQuestion() {
-        const inputs = document.querySelectorAll(
-          "#question" + currentQuestion + " input"
-        );
-        inputs.forEach((input) => (input.disabled = true));
-
-        document
-          .getElementById("lock-message-" + currentQuestion)
-          .classList.remove("hidden");
-
-        if (!lockedQuestions.includes(currentQuestion)) {
-          lockedQuestions.push(currentQuestion);
-        }
-
-        // Enable the next button to proceed
-        document.getElementById("nextBtn").disabled = false;
-
-        // Check if all questions are answered or locked
-        checkQuizCompletion();
-      }
-
-      // Update the progress bar
-      function updateProgressBar() {
-        const progressPercentage =
-          ((currentQuestion - 1) / totalQuestions) * 100;
-        document.getElementById("progress-bar").style.width =
-          progressPercentage + "%";
-        document.getElementById("current").innerText = currentQuestion;
-      }
-
-      // Show next question
-      function showNextQuestion() {
-        if (currentQuestion < totalQuestions) {
-          clearInterval(timer);
-          document
-            .getElementById("question" + currentQuestion)
-            .classList.add("hidden");
-          currentQuestion++;
-          document
-            .getElementById("question" + currentQuestion)
-            .classList.remove("hidden");
-
-          if (!lockedQuestions.includes(currentQuestion)) {
-            startTimer();
-          }
-
-          updateProgressBar();
-        } else if (currentQuestion === totalQuestions) {
-          // Check if user has answered or all questions are locked
-          if (isQuizComplete()) {
-            finishQuiz();
-          }
-        }
-
-        updateButtonStates();
-      }
-
-      // Show previous question
-      function showPreviousQuestion() {
-        if (currentQuestion > 1) {
-          clearInterval(timer);
-          document
-            .getElementById("question" + currentQuestion)
-            .classList.add("hidden");
-          currentQuestion--;
-          document
-            .getElementById("question" + currentQuestion)
-            .classList.remove("hidden");
-
-          if (!lockedQuestions.includes(currentQuestion)) {
-            startTimer();
-          }
-
-          updateProgressBar();
-        }
-
-        updateButtonStates();
-      }
-
-      // Update button states
-      function updateButtonStates() {
-        // Previous button should be disabled on first question
-        document.getElementById("prevBtn").disabled = currentQuestion === 1;
-
-        // Change Next to Submit on the last question
-        if (currentQuestion === totalQuestions) {
-          document.getElementById("nextBtn").innerText = "Submit";
-        } else {
-          document.getElementById("nextBtn").innerText = "Next";
-        }
-
-        // Check if the question is locked
-        if (lockedQuestions.includes(currentQuestion)) {
-          // If the question is locked, show the locked message
-          document
-            .getElementById("lock-message-" + currentQuestion)
-            .classList.remove("hidden");
-        }
-      }
-
-      // Check if all questions are completed
-      function isQuizComplete() {
-        const answeredCount = getNumberOfAnsweredQuestions();
-        return answeredCount + lockedQuestions.length >= totalQuestions;
-      }
-
-      // Check quiz completion
-      function checkQuizCompletion() {
-        if (isQuizComplete()) {
-          document.getElementById("nextBtn").disabled = false;
-        }
-      }
-
-      // Get number of answered questions
-      function getNumberOfAnsweredQuestions() {
-        let count = 0;
-        for (let i = 1; i <= totalQuestions; i++) {
-          const answered = document.querySelector(
-            'input[name="q' + i + '"]:checked'
-          );
-          if (answered && !lockedQuestions.includes(i)) {
-            count++;
-          }
-        }
-        return count;
-      }
-
-      // Calculate score
-      function calculateScore() {
-        let score = 0;
-        for (let i = 1; i <= totalQuestions; i++) {
-          const answer = document.querySelector(
-            'input[name="q' + i + '"]:checked'
-          );
-          if (answer) {
-            score += parseInt(answer.value);
-          }
-        }
-        return score;
-      }
-
-      // Create question summary
-      function createQuestionSummary() {
-        const summaryContainer = document.getElementById("question-summary");
-        summaryContainer.innerHTML = "";
-
-        for (let i = 1; i <= totalQuestions; i++) {
-          const questionDiv = document.createElement("div");
-          questionDiv.className = "border-b py-2";
-
-          const questionTitle = document.createElement("p");
-          questionTitle.className = "font-semibold";
-          questionTitle.textContent = `Question ${i}: ${
-            currentQuiz[i - 1].question
-          }`;
-
-          const answerStatus = document.createElement("p");
-          const answer = document.querySelector(`input[name="q${i}"]:checked`);
-
-          if (lockedQuestions.includes(i)) {
-            answerStatus.className = "text-red-500";
-            answerStatus.textContent = "Locked (No answer)";
-          } else if (answer) {
-            if (parseInt(answer.value) === 1) {
-              answerStatus.className = "text-green-500";
-              answerStatus.textContent = "Correct";
-            } else {
-              answerStatus.className = "text-red-500";
-              answerStatus.textContent = "Incorrect";
-            }
-          } else {
-            answerStatus.className = "text-gray-500";
-            answerStatus.textContent = "Not answered";
-          }
-
-          questionDiv.appendChild(questionTitle);
-          questionDiv.appendChild(answerStatus);
-          summaryContainer.appendChild(questionDiv);
-        }
-      }
-
-      // Finish the quiz
-      function finishQuiz() {
+      function resetTimer() {
         clearInterval(timer);
+        startTimer();
+        document.querySelectorAll(`#question${currentQuestion} input`).forEach((el) => (el.disabled = false));
+        document.getElementById(`lock-msg-${currentQuestion - 1}`).classList.add("hidden");
+      }
+
+      function updateProgressBar() {
+        const progress = (currentQuestion / totalQuestions) * 100;
+        document.getElementById("progress-bar").style.width = `${progress}%`;
+      }
+
+      function showResult() {
         document.getElementById("quiz-section").classList.add("hidden");
         document.getElementById("result").classList.remove("hidden");
 
-        const score = calculateScore();
-        document.getElementById("score").innerText = score;
+        let score = 0;
+        currentQuiz.forEach((q, idx) => {
+          if (userAnswers[idx] === q.correctIndex) score++;
+        });
+        document.getElementById("score").textContent = score;
 
-        createQuestionSummary();
+        const summary = document.getElementById("question-summary");
+        summary.innerHTML = "";
+        currentQuiz.forEach((q, idx) => {
+          const div = document.createElement("div");
+          div.innerHTML = `<p class="mt-2"><strong>Q${idx + 1}:</strong> ${
+            q.question
+          }<br/><strong>Your Answer:</strong> ${
+            q.options[userAnswers[idx]] || "None"
+          } <br/><strong>Correct:</strong> ${q.options[q.correctIndex]}</p>`;
+          summary.appendChild(div);
+        });
       }
 
-      // Reset quiz
       function resetQuiz() {
-        currentQuestion = 1;
-        lockedQuestions = [];
-        questionsAnswered = [];
-        currentQuiz = [];
-
-        // Show course selection again
         document.getElementById("result").classList.add("hidden");
         document.getElementById("course-selection").classList.remove("hidden");
-        document.getElementById("startQuizBtn").disabled = true;
+        currentQuestion = 1;
+        userAnswers = [];
+        clearInterval(timer);
+        document.getElementById("progress-bar").style.width = "0%";
         document.getElementById("course-dropdown").value = "";
+        document.getElementById("startQuizBtn").disabled = true;
       }
     </script>
   </body>
